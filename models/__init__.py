@@ -1,5 +1,5 @@
 from models.activations import Activation_Linear, Activation_Sigmoid, Activation_Softmax, Activation_ReLU
-from models.layers import Layer_Dense, Layer_Input
+from models.layers import Layer_Dense, Layer_Input, Layer_Dropout
 from models.loss import Loss, Loss_CategoricalCrossentropy, Loss_MeanSquaredError
 from models.model import Model
 from models.optimizers import Optimizer_Adam
@@ -21,5 +21,6 @@ __all__ = [
     Accuracy_Categorical,
     Accuracy_Regression,
     Accuracy,
-    Activation_Softmax_Loss_CategoricalCrossentropy
+    Activation_Softmax_Loss_CategoricalCrossentropy,
+    Layer_Dropout
 ]

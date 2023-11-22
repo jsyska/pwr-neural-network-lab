@@ -79,6 +79,8 @@ class Loss_MeanSquaredError(Loss):
 
     def forward(self, y_pred, y_true):
         sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
+        self.accumulated_sum += np.sum(sample_losses)
+        self.accumulated_count += len(sample_losses)
         return sample_losses
 
     def backward(self, dvalues, y_true):

@@ -53,7 +53,10 @@ class Model:
             self.softmax_classifier_output = Activation_Softmax_Loss_CategoricalCrossentropy()
 
     def train(self, X, y, *, epochs=1, batch_size=None, print_every=100, validation_data=None):
-        self.accuracy.init(y)
+
+        if self.accuracy is not None:
+            self.accuracy.init(y)
+
         train_steps = 1
 
         if batch_size is not None:
@@ -75,6 +78,19 @@ class Model:
                     batch_y = y[step*batch_size:(step+1)*batch_size]
 
                 output = self.forward(batch_X, training=True)
+
+                # Calculate loss
+                data_loss, regularization_loss = \
+                    self.loss.calculate(output, batch_y,
+                                        include_regularization=True)
+                loss = data_loss + regularization_loss
+
+                # Get predictions and calculate an accuracy
+                predictions = self.output_layer_activation.predictions(
+                                  output)
+                accuracy = self.accuracy.calculate(predictions,
+                                                   batch_y)
+
                 self.backward(output, batch_y)
                 self.optimizer.pre_update_params()
                 for layer in self.trainable_layers:
@@ -216,6 +232,16 @@ class Model:
 
         return activations
 
+    def get_layer_activations(self, X, layer_index):
+        input_data = X
+        for i, layer in enumerate(self.layers):
+            layer.forward(input_data, training=False)
+            input_data = layer.output
+            if i == layer_index:
+                break
+
+        return input_data
+
     def get_weights(self):
         weights = []
         for layer in self.trainable_layers:
@@ -227,3 +253,14 @@ class Model:
         for layer in self.trainable_layers:
             biases.append(layer.biases)
         return biases
+
+
+    def get_latent_space_representations(self, X, latent_layer_index):
+        input_data = X
+        for i, layer in enumerate(self.layers):
+            layer.forward(input_data, training=False)
+            input_data = layer.output
+            if i == latent_layer_index:
+                return input_data
+
+        raise ValueError("Latent layer index is out of range.")
