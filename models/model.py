@@ -1,5 +1,7 @@
 import copy
 import pickle
+import time
+
 import numpy as np
 from models.layers import Layer_Input
 from models.activations import Activation_Softmax
@@ -66,6 +68,7 @@ class Model:
 
         for epoch in range(1, epochs+1):
             print(f'epoch: {epoch}')
+            epoch_start_time = time.time()
             self.loss.new_pass()
             self.accuracy.new_pass()
 
@@ -79,23 +82,24 @@ class Model:
 
                 output = self.forward(batch_X, training=True)
 
-                # Calculate loss
-                data_loss, regularization_loss = \
-                    self.loss.calculate(output, batch_y,
-                                        include_regularization=True)
-                loss = data_loss + regularization_loss
+                data_loss, regularization_loss = self.loss.calculate(output, batch_y, include_regularization=True)
+                data_loss + regularization_loss
 
-                # Get predictions and calculate an accuracy
-                predictions = self.output_layer_activation.predictions(
-                                  output)
-                accuracy = self.accuracy.calculate(predictions,
-                                                   batch_y)
+                predictions = self.output_layer_activation.predictions(output)
+                self.accuracy.calculate(predictions, batch_y)
 
                 self.backward(output, batch_y)
                 self.optimizer.pre_update_params()
                 for layer in self.trainable_layers:
                     self.optimizer.update_params(layer)
                 self.optimizer.post_update_params()
+
+                processed = (step + 1) * batch_size
+                progress = (step + 1) / train_steps * 100
+                epoch_time = time.time() - epoch_start_time
+                print(f'\rEpoch: {epoch}/{epochs} - Batch: {step + 1}/{train_steps} ({processed}/{len(X)} samples) - {progress:.2f}% complete - Elapsed Time: {epoch_time:.2f} sec', end='')
+
+            print()
 
             epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(include_regularization=True)
             epoch_loss = epoch_data_loss + epoch_regularization_loss
